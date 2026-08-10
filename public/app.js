@@ -171,11 +171,12 @@ async function generateImage() {
   setStatus("Procesando con IA… espera unos segundos.");
 
   try {
+    const sourceImage = currentImage;
     const response = await fetch("/api/transform", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        image: currentImage,
+        image: sourceImage,
         stylePrompt
       })
     });
@@ -186,7 +187,9 @@ async function generateImage() {
       throw new Error(payload.error || "Error desconocido al generar.");
     }
 
-    const resultImage = payload.imageDataUrl || payload.imageUrl;
+    const transparentResult = payload.imageDataUrl || payload.imageUrl;
+    setStatus("Ajustando fondo y encuadre...");
+    const resultImage = await composePortraitOnWhiteCanvas(transparentResult, sourceImage);
     showResult(resultImage);
     setStatus("Guardando resultado...");
     await saveGeneratedPhoto(resultImage);
@@ -198,6 +201,113 @@ async function generateImage() {
   } finally {
     setLoading(false);
   }
+}
+
+async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
+  const [subjectImage, cameraImage] = await Promise.all([
+    loadImage(subjectSource),
+    loadImage(cameraSource)
+  ]);
+  const subjectCanvas = document.createElement("canvas");
+  subjectCanvas.width = subjectImage.naturalWidth;
+  subjectCanvas.height = subjectImage.naturalHeight;
+
+  const subjectContext = subjectCanvas.getContext("2d", {
+    willReadFrequently: true
+  });
+  subjectContext.drawImage(subjectImage, 0, 0);
+
+  const bounds = findVisibleBounds(
+    subjectContext.getImageData(0, 0, subjectCanvas.width, subjectCanvas.height),
+    subjectCanvas.width,
+    subjectCanvas.height
+  );
+
+  if (!bounds) {
+    throw new Error("No se detecto la persona en el resultado.");
+  }
+
+  const outputCanvas = document.createElement("canvas");
+  outputCanvas.width = cameraImage.naturalWidth;
+  outputCanvas.height = cameraImage.naturalHeight;
+
+  const outputContext = outputCanvas.getContext("2d");
+  outputContext.fillStyle = "#ffffff";
+  outputContext.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+  outputContext.imageSmoothingEnabled = true;
+  outputContext.imageSmoothingQuality = "high";
+
+  const maxSubjectWidth = outputCanvas.width * 0.96;
+  const maxSubjectHeight = outputCanvas.height * 0.94;
+  const scale = Math.min(
+    maxSubjectWidth / bounds.width,
+    maxSubjectHeight / bounds.height
+  );
+  const drawWidth = bounds.width * scale;
+  const drawHeight = bounds.height * scale;
+  const drawX = (outputCanvas.width - drawWidth) / 2;
+  const drawY = outputCanvas.height - drawHeight;
+
+  outputContext.drawImage(
+    subjectCanvas,
+    bounds.x,
+    bounds.y,
+    bounds.width,
+    bounds.height,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+
+  return outputCanvas.toDataURL("image/jpeg", 0.94);
+}
+
+function findVisibleBounds(imageData, width, height) {
+  const alphaThreshold = 24;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = imageData.data[(y * width + x) * 4 + 3];
+
+      if (alpha < alphaThreshold) {
+        continue;
+      }
+
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+
+  if (maxX < minX || maxY < minY) {
+    return null;
+  }
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1
+  };
+}
+
+function loadImage(imageSource) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener("load", () => resolve(image), { once: true });
+    image.addEventListener(
+      "error",
+      () => reject(new Error("No se pudo cargar la imagen generada.")),
+      { once: true }
+    );
+    image.src = imageSource;
+  });
 }
 
 function setPreview(dataUrl) {

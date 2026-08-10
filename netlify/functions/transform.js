@@ -91,12 +91,36 @@ export async function handler(event) {
       }
     });
 
-    const imageUrl = await normalizeOutput(output);
+    const generatedImageUrl = await normalizeOutput(output);
+
+    if (!generatedImageUrl.startsWith("http")) {
+      throw new Error("La IA no devolvio una imagen valida.");
+    }
+
+    const backgroundFreeOutput = await replicate.run("bria/remove-background", {
+      input: {
+        image: generatedImageUrl,
+        preserve_alpha: true,
+        content_moderation: false
+      },
+      wait: {
+        mode: "poll",
+        interval: 1000,
+        timeout: 30
+      }
+    });
+
+    const imageUrl = await normalizeOutput(backgroundFreeOutput);
     const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
+
+    if (!imageDataUrl) {
+      throw new Error("No se pudo preparar la imagen sin fondo.");
+    }
 
     return jsonResponse(200, {
       imageUrl,
-      imageDataUrl
+      imageDataUrl,
+      backgroundRemoved: true
     });
   } catch (error) {
     console.error(error);
