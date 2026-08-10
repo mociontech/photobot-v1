@@ -33,16 +33,18 @@ const storage = getStorage(firebaseApp);
 const stylePrompt = [
   "Transform this photo into a full-frame POP COMIC / GRAPHIC NOVEL + STREET ART portrait illustration.",
   "Preserve the exact same person and identity from the reference photo.",
-  "Keep the exact same canvas aspect ratio, framing, crop, subject size, subject position, and image dimensions as the input photo.",
+  "Use the input photo as a strict composition template: keep exactly the same canvas aspect ratio, framing, crop, subject scale, subject position, head size, shoulder width, and visible body area.",
+  "Do not zoom in, zoom out, resize, recenter, shrink, enlarge, or recompose the person; every facial and body landmark must remain in the same relative place in the frame as in the input photo.",
   "Keep the original face proportions, hairstyle, pose, expression, eyebrows, gaze direction, clothing, and visible body crop.",
   "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
   "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
   "Use bold black ink outlines, graphic-novel shading, pop-comic contrast, street-art marker texture, warm natural skin tones, realistic detailed eyes, and glossy hair.",
-  "Make it look like the full original photo was redrawn by AI, not like a sticker or cutout.",
-  "The person must fill the frame similarly to the input photo, reaching a similar crop near the edges when applicable.",
+  "Make it look like the full original photo was redrawn by AI at the original scale.",
+  "The person must occupy the same percentage of the canvas as in the input photo and reach the same frame edges; never create a small centered portrait or add empty space around the person.",
   "Remove the original background completely and replace it with flat pure white background only, #ffffff.",
-  "No sticker effect, no sticker border, no white cutout outline, no isolated floating head, no tiny centered character, and no extra white margins.",
+  "Add one thin, clean, uniform white silhouette outline that closely follows the person's outer contour without changing the person's size or crop.",
+  "No thick sticker border, no isolated floating head, no tiny centered character, no pedestal, and no extra margins.",
   "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, text, or background graphics.",
   "High detail, no extra people, no distorted face, no changed identity."
 ].join(" ");
