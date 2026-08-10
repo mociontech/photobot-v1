@@ -64,22 +64,15 @@ app.listen(port, () => {
 });
 
 const defaultPrompt = [
-  "Transform this photo into a full-frame POP COMIC / GRAPHIC NOVEL + STREET ART portrait illustration.",
-  "Preserve the exact same person and identity from the reference photo.",
-  "Use the input photo as a strict composition template: keep exactly the same canvas aspect ratio, framing, crop, subject scale, subject position, head size, shoulder width, and visible body area.",
-  "Do not zoom in, zoom out, resize, recenter, shrink, enlarge, or recompose the person; every facial and body landmark must remain in the same relative place in the frame as in the input photo.",
-  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, gaze direction, clothing, and visible body crop.",
-  "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
-  "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
-  "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
-  "Use bold black ink outlines, graphic-novel shading, pop-comic contrast, street-art marker texture, warm natural skin tones, realistic detailed eyes, and glossy hair.",
-  "Make it look like the full original photo was redrawn by AI at the original scale.",
-  "The person must occupy the same percentage of the canvas as in the input photo and reach the same frame edges; never create a small centered portrait or add empty space around the person.",
-  "Remove the original background completely and replace it with flat pure white background only, #ffffff.",
-  "Add one thin, clean, uniform white silhouette outline that closely follows the person's outer contour without changing the person's size or crop.",
-  "No thick sticker border, no isolated floating head, no tiny centered character, no pedestal, and no extra margins.",
-  "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, text, or background graphics.",
-  "High detail, no extra people, no distorted face, no changed identity."
+  "Redraw the input photo as a polished POP COMIC / GRAPHIC NOVEL + STREET ART portrait, matching the visual finish of a professional comic-book character illustration.",
+  "Use bold clean black ink contours, smooth vector-like cel shading, subtle halftone detail on the person and clothing, warm natural skin tones, realistic detailed eyes, glossy illustrated hair, and crisp high-contrast facial features.",
+  "Preserve the exact identity, face proportions, hairstyle, pose, expression, gaze, clothing, accessories, and every visible part of the person from the input photo.",
+  "The input photo is a locked composition template: preserve its exact aspect ratio, camera framing, crop, subject position, head size, shoulder width, body size, and the percentage of the canvas occupied by the person.",
+  "Do not zoom, shrink, enlarge, recenter, reposition, or recompose the person. The illustrated person must have exactly the same scale and crop as the person in the camera photo, including where the body meets the frame edges.",
+  "Add a narrow, clean white silhouette keyline directly around the person's outer contour without changing the person's size or creating extra space.",
+  "Replace the entire original background with one uninterrupted flat pure white background, #ffffff.",
+  "The background must contain no colors, paint splashes, rays, dots, halftone, texture, gradient, scenery, shadows, objects, logos, or text.",
+  "Do not create a small centered portrait, floating head, badge, pedestal, thick sticker border, extra margins, extra people, invented glasses, distorted face, or changed identity."
 ].join(" ");
 
 async function normalizeOutput(output) {
