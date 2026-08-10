@@ -7,3 +7,7 @@
   to = "/.netlify/functions/transform"
   status = 200
 
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

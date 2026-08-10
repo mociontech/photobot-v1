@@ -117,7 +117,7 @@ Background:
 Use a plain clean white background only. Do not add green details, orange details, halftone bursts, splash graphics, motion lines, or decorative background elements. Keep the background fully white and simple so the focus stays entirely on the character.
 
 Outline:
-Add a subtle clean outline around the full silhouette of the person to separate the figure from the white background. Use a very light gray outline instead of pure white, approximately #F2F2F2 or a similar soft off-white/light gray tone. The outline should be visible enough to distinguish the person from the background, but still elegant and subtle.
+Add a clean pure-white silhouette border around the full person. Add only a very thin light-gray outer keyline around that white border so the white silhouette remains visible against the pure-white background.
 
 Composition:
 - use a tight close-up bust portrait like the target reference, with the face, head, neck, and shoulders filling most of the canvas

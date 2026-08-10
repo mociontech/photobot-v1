@@ -56,7 +56,7 @@ Background:
 Use a plain clean white background only. Do not add green details, orange details, halftone bursts, splash graphics, motion lines, or decorative background elements. Keep the background fully white and simple so the focus stays entirely on the character.
 
 Outline:
-Add a subtle clean outline around the full silhouette of the person to separate the figure from the white background. Use a very light gray outline instead of pure white, approximately #F2F2F2 or a similar soft off-white/light gray tone. The outline should be visible enough to distinguish the person from the background, but still elegant and subtle.
+Add a clean pure-white silhouette border around the full person. Add only a very thin light-gray outer keyline around that white border so the white silhouette remains visible against the pure-white background.
 
 Composition:
 - use a tight close-up bust portrait like the target reference, with the face, head, neck, and shoulders filling most of the canvas
@@ -217,7 +217,7 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   });
   subjectContext.drawImage(subjectImage, 0, 0);
 
-  const bounds = findVisibleBounds(
+  const bounds = findSubjectBounds(
     subjectContext.getImageData(0, 0, subjectCanvas.width, subjectCanvas.height),
     subjectCanvas.width,
     subjectCanvas.height
@@ -237,16 +237,47 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   outputContext.imageSmoothingEnabled = true;
   outputContext.imageSmoothingQuality = "high";
 
-  const maxSubjectWidth = outputCanvas.width * 0.96;
-  const maxSubjectHeight = outputCanvas.height * 0.94;
+  const outlineRadius = Math.max(7, Math.round(Math.min(outputCanvas.width, outputCanvas.height) * 0.012));
+  const outerRadius = outlineRadius + Math.max(2, Math.round(outlineRadius * 0.3));
+  const targetSubjectWidth = outputCanvas.width * 0.98;
+  const targetSubjectHeight = outputCanvas.height * 0.94;
   const scale = Math.min(
-    maxSubjectWidth / bounds.width,
-    maxSubjectHeight / bounds.height
+    Math.max(
+      targetSubjectWidth / bounds.width,
+      targetSubjectHeight / bounds.height
+    ),
+    (outputCanvas.height - outerRadius * 2) / bounds.height
   );
   const drawWidth = bounds.width * scale;
   const drawHeight = bounds.height * scale;
   const drawX = (outputCanvas.width - drawWidth) / 2;
-  const drawY = outputCanvas.height - drawHeight;
+  const drawY = outputCanvas.height - drawHeight - outerRadius;
+
+  const graySilhouette = createSilhouetteLayer(
+    subjectCanvas,
+    bounds,
+    outputCanvas.width,
+    outputCanvas.height,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight,
+    "#d8d8d8"
+  );
+  const whiteSilhouette = createSilhouetteLayer(
+    subjectCanvas,
+    bounds,
+    outputCanvas.width,
+    outputCanvas.height,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight,
+    "#ffffff"
+  );
+
+  drawExpandedSilhouette(outputContext, graySilhouette, outerRadius);
+  drawExpandedSilhouette(outputContext, whiteSilhouette, outlineRadius);
 
   outputContext.drawImage(
     subjectCanvas,
@@ -263,8 +294,9 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   return outputCanvas.toDataURL("image/jpeg", 0.94);
 }
 
-function findVisibleBounds(imageData, width, height) {
-  const alphaThreshold = 24;
+function findSubjectBounds(imageData, width, height) {
+  const alphaThreshold = 32;
+  const whiteThreshold = 248;
   let minX = width;
   let minY = height;
   let maxX = -1;
@@ -272,9 +304,26 @@ function findVisibleBounds(imageData, width, height) {
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const alpha = imageData.data[(y * width + x) * 4 + 3];
+      const pixelIndex = (y * width + x) * 4;
+      const red = imageData.data[pixelIndex];
+      const green = imageData.data[pixelIndex + 1];
+      const blue = imageData.data[pixelIndex + 2];
+      const alpha = imageData.data[pixelIndex + 3];
 
       if (alpha < alphaThreshold) {
+        continue;
+      }
+
+      const opacity = alpha / 255;
+      const redOnWhite = 255 - (255 - red) * opacity;
+      const greenOnWhite = 255 - (255 - green) * opacity;
+      const blueOnWhite = 255 - (255 - blue) * opacity;
+
+      if (
+        redOnWhite >= whiteThreshold &&
+        greenOnWhite >= whiteThreshold &&
+        blueOnWhite >= whiteThreshold
+      ) {
         continue;
       }
 
@@ -295,6 +344,53 @@ function findVisibleBounds(imageData, width, height) {
     width: maxX - minX + 1,
     height: maxY - minY + 1
   };
+}
+
+function createSilhouetteLayer(
+  subjectCanvas,
+  bounds,
+  width,
+  height,
+  drawX,
+  drawY,
+  drawWidth,
+  drawHeight,
+  color
+) {
+  const layer = document.createElement("canvas");
+  layer.width = width;
+  layer.height = height;
+
+  const context = layer.getContext("2d");
+  context.drawImage(
+    subjectCanvas,
+    bounds.x,
+    bounds.y,
+    bounds.width,
+    bounds.height,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+  context.globalCompositeOperation = "source-in";
+  context.fillStyle = color;
+  context.fillRect(0, 0, width, height);
+
+  return layer;
+}
+
+function drawExpandedSilhouette(context, silhouette, radius) {
+  const steps = 32;
+
+  for (let step = 0; step < steps; step += 1) {
+    const angle = (Math.PI * 2 * step) / steps;
+    context.drawImage(
+      silhouette,
+      Math.cos(angle) * radius,
+      Math.sin(angle) * radius
+    );
+  }
 }
 
 function loadImage(imageSource) {
