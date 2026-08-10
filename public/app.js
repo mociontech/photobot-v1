@@ -31,15 +31,12 @@ const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 
 const stylePrompt = [
-  "Redraw the input photo as a polished POP COMIC / GRAPHIC NOVEL + STREET ART portrait, matching the visual finish of a professional comic-book character illustration.",
-  "Use bold clean black ink contours, smooth vector-like cel shading, subtle halftone detail on the person and clothing, warm natural skin tones, realistic detailed eyes, glossy illustrated hair, and crisp high-contrast facial features.",
-  "Preserve the exact identity, face proportions, hairstyle, pose, expression, gaze, clothing, accessories, and every visible part of the person from the input photo.",
-  "The input photo is a locked composition template: preserve its exact aspect ratio, camera framing, crop, subject position, head size, shoulder width, body size, and the percentage of the canvas occupied by the person.",
-  "Do not zoom, shrink, enlarge, recenter, reposition, or recompose the person. The illustrated person must have exactly the same scale and crop as the person in the camera photo, including where the body meets the frame edges.",
-  "Add a narrow, clean white silhouette keyline directly around the person's outer contour without changing the person's size or creating extra space.",
-  "Replace the entire original background with one uninterrupted flat pure white background, #ffffff.",
-  "The background must contain no colors, paint splashes, rays, dots, halftone, texture, gradient, scenery, shadows, objects, logos, or text.",
-  "Do not create a small centered portrait, floating head, badge, pedestal, thick sticker border, extra margins, extra people, invented glasses, distorted face, or changed identity."
+  "Transform this portrait into a vibrant stylized sports-comic illustration.",
+  "Keep the same person, face identity, hairstyle, pose, and expression.",
+  "Use bold ink outlines, warm skin tones, detailed eyes, glossy curly hair,",
+  "Use a flat pure white background only, #ffffff,",
+  "dramatic rim light, clean sticker-like white contour, high detail.",
+  "No text, no logos, no extra people, no distorted face."
 ].join(" ");
 
 takePhotoButton.addEventListener("click", takePhoto);
