@@ -4,7 +4,9 @@
       "Bash(git clone *)",
       "Bash(npm install *)",
       "Bash(npm start *)",
-      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"CommandLine LIKE '%server.js%'\\\\\" | Select-Object ProcessId,CommandLine\")"
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"CommandLine LIKE '%server.js%'\\\\\" | Select-Object ProcessId,CommandLine\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Select-Object ProcessId,CommandLine\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Select-Object ProcessId,CommandLine | Format-List\")"
     ]
   }
 }
