@@ -83,11 +83,11 @@ function normalizeOutput(output) {
   }
 
   if (Array.isArray(output)) {
-    const firstOutput = output[0];
-    return typeof firstOutput === "string" ? firstOutput : firstOutput?.url?.() || String(firstOutput);
+    return normalizeOutput(output[0]);
   }
 
-  return output?.url?.() || String(output);
+  const url = output?.url?.() ?? output;
+  return url !== undefined && url !== null ? String(url) : "";
 }
 
 async function fetchImageAsDataUrl(imageUrl) {
