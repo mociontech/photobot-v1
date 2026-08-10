@@ -550,17 +550,62 @@ function showResult(imageSource) {
   downloadButton.hidden = !currentComparison;
 }
 
-function downloadResult() {
+async function downloadResult() {
   if (!currentComparison) {
     return;
   }
 
+  const fileName = `photobot-comparacion-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
+  const comparisonFile = dataUrlToFile(currentComparison, fileName);
+
+  if (
+    navigator.share &&
+    navigator.canShare?.({ files: [comparisonFile] })
+  ) {
+    try {
+      setStatus("En el menu, toca Guardar imagen para enviarla a Fotos.");
+      await navigator.share({
+        title: "Comparacion Photobot",
+        files: [comparisonFile]
+      });
+      setStatus("Comparacion compartida o guardada.");
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        setStatus("Comparacion lista para guardar.");
+        return;
+      }
+
+      console.warn("No se pudo abrir el menu para compartir:", error);
+    }
+  }
+
+  downloadFile(comparisonFile);
+  setStatus("Comparacion descargada.");
+}
+
+function dataUrlToFile(dataUrl, fileName) {
+  const [metadata, base64] = dataUrl.split(",");
+  const mimeType = metadata.match(/data:(.*?);base64/)?.[1] || "image/jpeg";
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new File([bytes], fileName, { type: mimeType });
+}
+
+function downloadFile(file) {
+  const objectUrl = URL.createObjectURL(file);
   const link = document.createElement("a");
-  link.href = currentComparison;
-  link.download = `photobot-comparacion-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
+  link.href = objectUrl;
+  link.download = file.name;
   document.body.append(link);
   link.click();
   link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 async function saveGeneratedPhoto(imageSource) {
