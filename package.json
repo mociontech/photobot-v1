@@ -1,0 +1,18 @@
+{
+  "name": "photobot-v1",
+  "version": "1.0.0",
+  "description": "Mini app para tomar una foto y convertirla en una ilustración con Replicate.",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "replicate": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

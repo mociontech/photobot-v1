@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="App IA" />
+    <title>App IA</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">App IA</p>
+          <h1>Retrato ilustrado</h1>
+        </div>
+        <p id="status" class="status">Activa la cámara y toma tu foto.</p>
+      </header>
+
+      <section class="stage" aria-live="polite">
+        <article class="panel image-card">
+          <div class="card-label">Cámara</div>
+          <video id="camera" autoplay playsinline muted></video>
+          <img id="preview" alt="Foto capturada para procesar" hidden />
+          <div id="cameraFallback" class="placeholder" hidden>
+            Si la cámara no abre por IP local, toca “Tomar foto” para usar la cámara nativa.
+          </div>
+        </article>
+
+        <article class="panel image-card result-card">
+          <div class="card-label">Resultado IA</div>
+          <div id="placeholder" class="placeholder">Tu resultado aparecerá aquí ✨</div>
+          <img id="result" alt="Resultado generado por IA" hidden />
+        </article>
+      </section>
+
+      <footer class="controls">
+        <button id="takePhoto" class="primary take-photo" type="button">Tomar foto</button>
+        <button id="retake" class="ghost" type="button" hidden>Reiniciar</button>
+        <input id="fileInput" type="file" accept="image/*" capture="user" hidden />
+        <canvas id="snapshot" hidden></canvas>
+      </footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
