@@ -31,17 +31,19 @@ const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 
 const stylePrompt = [
-  "Transform this portrait into a polished comic-book historieta portrait illustration.",
+  "Transform this photo into a POP COMIC / GRAPHIC NOVEL + STREET ART + STICKER PORTRAIT illustration.",
   "Preserve the exact same person and identity from the reference photo.",
-  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, and gaze direction.",
+  "Keep the exact same canvas aspect ratio, framing, crop, subject size, subject position, and image dimensions as the input photo.",
+  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, gaze direction, clothing, and visible body crop.",
   "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
   "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
-  "Use bold black ink outlines, expressive comic shading, warm natural skin tones, realistic detailed eyes, glossy hair, and subtle halftone only on the person.",
-  "Create a sticker-style white cutout silhouette around the person, with a thin dark ink edge so the white outline is visible.",
+  "Use bold black ink outlines, graphic-novel shading, pop-comic contrast, street-art marker texture, warm natural skin tones, realistic detailed eyes, and glossy hair.",
+  "Make the person look like a full-frame sticker portrait: add a clean white sticker cutout border around the body with a thin black ink edge.",
+  "The person must fill the frame similarly to the input photo; do not shrink the portrait, do not create a tiny sticker floating in the center, and do not add extra white margins.",
   "Remove the original background completely and replace it with flat pure white background only, #ffffff.",
-  "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, or background graphics.",
-  "High detail, centered portrait, no extra people, no distorted face, no changed identity, no changed clothing."
+  "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, text, or background graphics.",
+  "High detail, no extra people, no distorted face, no changed identity."
 ].join(" ");
 
 takePhotoButton.addEventListener("click", takePhoto);
@@ -106,17 +108,19 @@ function takePhoto() {
 }
 
 function captureInlinePhoto() {
-  const size = Math.min(camera.videoWidth, camera.videoHeight);
-  const sourceX = (camera.videoWidth - size) / 2;
-  const sourceY = (camera.videoHeight - size) / 2;
+  const sourceWidth = camera.videoWidth;
+  const sourceHeight = camera.videoHeight;
+  const scale = Math.min(1, 1200 / Math.max(sourceWidth, sourceHeight));
 
-  snapshot.width = 900;
-  snapshot.height = 900;
+  snapshot.width = Math.round(sourceWidth * scale);
+  snapshot.height = Math.round(sourceHeight * scale);
 
   const context = snapshot.getContext("2d");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
   context.translate(snapshot.width, 0);
   context.scale(-1, 1);
-  context.drawImage(camera, sourceX, sourceY, size, size, 0, 0, snapshot.width, snapshot.height);
+  context.drawImage(camera, 0, 0, sourceWidth, sourceHeight, 0, 0, snapshot.width, snapshot.height);
 
   setPreview(snapshot.toDataURL("image/jpeg", 0.86));
   generateImage();
