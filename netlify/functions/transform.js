@@ -3,7 +3,7 @@ import Replicate from "replicate";
 const model = process.env.REPLICATE_MODEL || "google/gemini-2.5-flash-image";
 
 const defaultPrompt = [
-  "Transform this photo into a POP COMIC / GRAPHIC NOVEL + STREET ART + STICKER PORTRAIT illustration.",
+  "Transform this photo into a full-frame POP COMIC / GRAPHIC NOVEL + STREET ART portrait illustration.",
   "Preserve the exact same person and identity from the reference photo.",
   "Keep the exact same canvas aspect ratio, framing, crop, subject size, subject position, and image dimensions as the input photo.",
   "Keep the original face proportions, hairstyle, pose, expression, eyebrows, gaze direction, clothing, and visible body crop.",
@@ -11,9 +11,10 @@ const defaultPrompt = [
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
   "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
   "Use bold black ink outlines, graphic-novel shading, pop-comic contrast, street-art marker texture, warm natural skin tones, realistic detailed eyes, and glossy hair.",
-  "Make the person look like a full-frame sticker portrait: add a clean white sticker cutout border around the body with a thin black ink edge.",
-  "The person must fill the frame similarly to the input photo; do not shrink the portrait, do not create a tiny sticker floating in the center, and do not add extra white margins.",
+  "Make it look like the full original photo was redrawn by AI, not like a sticker or cutout.",
+  "The person must fill the frame similarly to the input photo, reaching a similar crop near the edges when applicable.",
   "Remove the original background completely and replace it with flat pure white background only, #ffffff.",
+  "No sticker effect, no sticker border, no white cutout outline, no isolated floating head, no tiny centered character, and no extra white margins.",
   "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, text, or background graphics.",
   "High detail, no extra people, no distorted face, no changed identity."
 ].join(" ");
