@@ -1,3 +1,6 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDownloadURL, getStorage, ref, uploadString } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
 const camera = document.querySelector("#camera");
 const snapshot = document.querySelector("#snapshot");
 const preview = document.querySelector("#preview");
@@ -14,12 +17,26 @@ let currentImage = "";
 let mediaStream;
 let isInlineCameraReady = false;
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAd32fjHVssRxIzHijkeWd37MamHWzCajM",
+  authDomain: "f1-sap.firebaseapp.com",
+  databaseURL: "https://f1-sap-default-rtdb.firebaseio.com",
+  projectId: "f1-sap",
+  storageBucket: "f1-sap.appspot.com",
+  messagingSenderId: "1043864334257",
+  appId: "1:1043864334257:web:bcc854d01f1c12fa415790"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const storage = getStorage(firebaseApp);
+
 const stylePrompt = [
   "Transform this portrait into a polished stylized sports-comic illustration.",
   "Preserve the exact same person and identity from the reference photo.",
-  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, glasses, and gaze direction.",
+  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, and gaze direction.",
   "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
+  "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
   "Use bold ink outlines, warm natural skin tones, realistic detailed eyes, glossy hair, and a clean editorial look.",
   "Remove the original background completely and replace it with plain pure white.",
   "No shadow, no black silhouette, no drop shadow, no outline shape behind the person.",
@@ -131,10 +148,13 @@ async function generateImage() {
       throw new Error(payload.error || "Error desconocido al generar.");
     }
 
-    showResult(payload.imageDataUrl || payload.imageUrl);
+    const resultImage = payload.imageDataUrl || payload.imageUrl;
+    showResult(resultImage);
+    setStatus("Guardando resultado...");
+    await saveGeneratedPhoto(resultImage);
     currentImage = "";
     fileInput.value = "";
-    setStatus("Listo. Resultado generado.");
+    setStatus("Listo. Resultado generado y guardado.");
   } catch (error) {
     setStatus(`Error: ${error.message}`);
   } finally {
@@ -155,6 +175,25 @@ function showResult(imageSource) {
   result.src = imageSource;
   result.hidden = false;
   placeholder.hidden = true;
+}
+
+async function saveGeneratedPhoto(imageSource) {
+  if (!imageSource?.startsWith("data:image/")) {
+    console.warn("No se guardo en Firebase porque el resultado no es data URL.");
+    return "";
+  }
+
+  const fileName = `photobot-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
+  const imageRef = ref(storage, `Filtro Diego/${fileName}`);
+
+  await uploadString(imageRef, imageSource, "data_url", {
+    contentType: "image/jpeg",
+    customMetadata: {
+      app: "photobot-v1"
+    }
+  });
+
+  return getDownloadURL(imageRef);
 }
 
 function resetFlow() {

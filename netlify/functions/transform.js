@@ -5,9 +5,10 @@ const model = process.env.REPLICATE_MODEL || "google/gemini-2.5-flash-image";
 const defaultPrompt = [
   "Transform this portrait into a polished stylized sports-comic illustration.",
   "Preserve the exact same person and identity from the reference photo.",
-  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, glasses, and gaze direction.",
+  "Keep the original face proportions, hairstyle, pose, expression, eyebrows, and gaze direction.",
   "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
+  "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
   "Use bold ink outlines, warm natural skin tones, realistic detailed eyes, glossy hair,",
   "and a clean editorial look. Use a pure white background only.",
   "Remove the original background completely and replace it with plain pure white.",
@@ -55,7 +56,7 @@ export async function handler(event) {
       }
     });
 
-    const imageUrl = normalizeOutput(output);
+    const imageUrl = await normalizeOutput(output);
     const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
 
     return jsonResponse(200, {
@@ -81,20 +82,32 @@ function jsonResponse(statusCode, body) {
   };
 }
 
-function normalizeOutput(output) {
-  if (typeof output === "string") {
-    return output;
+async function normalizeOutput(output) {
+  const firstOutput = Array.isArray(output) ? output[0] : output;
+
+  if (typeof firstOutput === "string") {
+    return firstOutput;
   }
 
-  if (Array.isArray(output)) {
-    return normalizeOutput(output[0]);
+  if (firstOutput instanceof URL) {
+    return firstOutput.toString();
   }
 
-  const url = output?.url?.() ?? output;
-  return url !== undefined && url !== null ? String(url) : "";
+  if (typeof firstOutput?.url === "function") {
+    const url = await firstOutput.url();
+    return url?.toString() || "";
+  }
+
+  if (typeof firstOutput?.url === "string") {
+    return firstOutput.url;
+  }
+
+  return firstOutput?.toString?.() || "";
 }
 
 async function fetchImageAsDataUrl(imageUrl) {
+  imageUrl = imageUrl?.toString?.() || "";
+
   if (!imageUrl || !imageUrl.startsWith("http")) {
     return imageUrl?.startsWith("data:image/") ? imageUrl : "";
   }
@@ -115,4 +128,3 @@ async function fetchImageAsDataUrl(imageUrl) {
     return "";
   }
 }
-
