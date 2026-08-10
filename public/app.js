@@ -16,7 +16,9 @@ const retakeButton = document.querySelector("#retake");
 const fileInput = document.querySelector("#fileInput");
 
 let currentImage = "";
+let currentOriginal = "";
 let currentResult = "";
+let currentComparison = "";
 let mediaStream;
 let isInlineCameraReady = false;
 let activeFacingMode = "environment";
@@ -48,6 +50,7 @@ Important visual treatment:
 - use a distinctly warm color grade with peach, coral, terracotta, amber, and golden highlights
 - keep blacks rich and neutral while making skin and midtones feel sunlit and warm
 - avoid cold blue, cyan, steel-gray, pale, desaturated, or washed-out color casts
+- the complete illustration must look clearly warm at first glance, with golden-peach skin, terracotta shadows, amber highlights, and lively saturated color
 - polished comic-book finish, modern and premium
 - slightly stylized, but identity must remain recognizable
 
@@ -86,7 +89,7 @@ Keep the same bold comic aesthetic and only make a subtle reduction in facial li
 Avoid:
 exaggerated wrinkles, deep facial folds, harsh aging lines, overly textured skin, flat vector look, overly soft illustration, washed-out colors, sticker effect, cutout effect, green details, graphic background elements, anime style, 3D render look, photorealism, generic facial features, or extra accessories not present in the original photo.
 
-Make the final result look like a high-quality stylized comic illustration with a white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
+Make the final result look like a high-quality stylized comic illustration with a distinctly warm premium palette, white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
 
 takePhotoButton.addEventListener("click", takePhoto);
 switchCameraButton.addEventListener("click", switchCamera);
@@ -252,6 +255,8 @@ async function generateImage() {
     const transparentResult = payload.imageDataUrl || payload.imageUrl;
     setStatus("Ajustando fondo y encuadre...");
     const resultImage = await composePortraitOnWhiteCanvas(transparentResult, sourceImage);
+    setStatus("Preparando comparacion...");
+    currentComparison = await createComparisonImage(currentOriginal, resultImage);
     showResult(resultImage);
     setStatus("Guardando resultado...");
     await saveGeneratedPhoto(resultImage);
@@ -342,7 +347,7 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   drawExpandedSilhouette(outputContext, whiteSilhouette, outlineRadius);
 
   outputContext.save();
-  outputContext.filter = "saturate(1.12) sepia(0.06) contrast(1.03)";
+  outputContext.filter = "saturate(1.18) sepia(0.12) contrast(1.04) brightness(1.02)";
   outputContext.drawImage(
     subjectCanvas,
     bounds.x,
@@ -471,8 +476,64 @@ function loadImage(imageSource) {
   });
 }
 
+async function createComparisonImage(originalSource, resultSource) {
+  const [originalImage, resultImage] = await Promise.all([
+    loadImage(originalSource),
+    loadImage(resultSource)
+  ]);
+  const sourceWidth = Math.max(originalImage.naturalWidth, resultImage.naturalWidth);
+  const sourceHeight = Math.max(originalImage.naturalHeight, resultImage.naturalHeight);
+  const exportScale = Math.min(1, 1600 / Math.max(sourceWidth, sourceHeight));
+  const panelWidth = Math.round(sourceWidth * exportScale);
+  const imageHeight = Math.round(sourceHeight * exportScale);
+  const labelHeight = Math.max(64, Math.round(imageHeight * 0.075));
+  const dividerWidth = Math.max(8, Math.round(panelWidth * 0.01));
+  const comparisonCanvas = document.createElement("canvas");
+  comparisonCanvas.width = panelWidth * 2 + dividerWidth;
+  comparisonCanvas.height = imageHeight + labelHeight;
+
+  const context = comparisonCanvas.getContext("2d");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, comparisonCanvas.width, comparisonCanvas.height);
+  context.fillStyle = "#111111";
+  context.fillRect(0, 0, comparisonCanvas.width, labelHeight);
+  context.fillRect(panelWidth, 0, dividerWidth, comparisonCanvas.height);
+  context.fillStyle = "#ffffff";
+  context.font = `700 ${Math.max(24, Math.round(labelHeight * 0.42))}px Arial, sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText("ORIGINAL", panelWidth / 2, labelHeight / 2);
+  context.fillText(
+    "RESULTADO IA",
+    panelWidth + dividerWidth + panelWidth / 2,
+    labelHeight / 2
+  );
+
+  drawImageContained(context, originalImage, 0, labelHeight, panelWidth, imageHeight);
+  drawImageContained(
+    context,
+    resultImage,
+    panelWidth + dividerWidth,
+    labelHeight,
+    panelWidth,
+    imageHeight
+  );
+
+  return comparisonCanvas.toDataURL("image/jpeg", 0.94);
+}
+
+function drawImageContained(context, image, x, y, width, height) {
+  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const drawX = x + (width - drawWidth) / 2;
+  const drawY = y + (height - drawHeight) / 2;
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+}
+
 function setPreview(dataUrl) {
   currentImage = dataUrl;
+  currentOriginal = dataUrl;
   preview.src = dataUrl;
   preview.hidden = false;
   camera.hidden = true;
@@ -486,24 +547,20 @@ function showResult(imageSource) {
   result.src = imageSource;
   result.hidden = false;
   placeholder.hidden = true;
-  downloadButton.hidden = false;
+  downloadButton.hidden = !currentComparison;
 }
 
-async function downloadResult() {
-  if (!currentResult) {
+function downloadResult() {
+  if (!currentComparison) {
     return;
   }
 
-  const response = await fetch(currentResult);
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = `photobot-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
+  link.href = currentComparison;
+  link.download = `photobot-comparacion-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
   document.body.append(link);
   link.click();
   link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 async function saveGeneratedPhoto(imageSource) {
@@ -527,7 +584,9 @@ async function saveGeneratedPhoto(imageSource) {
 
 function resetFlow() {
   currentImage = "";
+  currentOriginal = "";
   currentResult = "";
+  currentComparison = "";
   fileInput.value = "";
   preview.removeAttribute("src");
   result.removeAttribute("src");
@@ -549,6 +608,7 @@ function resetFlow() {
 
 function clearResult() {
   currentResult = "";
+  currentComparison = "";
   result.removeAttribute("src");
   result.hidden = true;
   placeholder.hidden = false;

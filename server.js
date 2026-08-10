@@ -104,6 +104,7 @@ Important visual treatment:
 - use a distinctly warm color grade with peach, coral, terracotta, amber, and golden highlights
 - keep blacks rich and neutral while making skin and midtones feel sunlit and warm
 - avoid cold blue, cyan, steel-gray, pale, desaturated, or washed-out color casts
+- the complete illustration must look clearly warm at first glance, with golden-peach skin, terracotta shadows, amber highlights, and lively saturated color
 - polished comic-book finish, modern and premium
 - slightly stylized, but identity must remain recognizable
 
@@ -142,7 +143,7 @@ Keep the same bold comic aesthetic and only make a subtle reduction in facial li
 Avoid:
 exaggerated wrinkles, deep facial folds, harsh aging lines, overly textured skin, flat vector look, overly soft illustration, washed-out colors, sticker effect, cutout effect, green details, graphic background elements, anime style, 3D render look, photorealism, generic facial features, or extra accessories not present in the original photo.
 
-Make the final result look like a high-quality stylized comic illustration with a white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
+Make the final result look like a high-quality stylized comic illustration with a distinctly warm premium palette, white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
 
 async function normalizeOutput(output) {
   const firstOutput = Array.isArray(output) ? output[0] : output;
