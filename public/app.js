@@ -31,17 +31,17 @@ const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
 
 const stylePrompt = [
-  "Transform this portrait into a polished stylized sports-comic illustration.",
+  "Transform this portrait into a polished comic-book historieta portrait illustration.",
   "Preserve the exact same person and identity from the reference photo.",
   "Keep the original face proportions, hairstyle, pose, expression, eyebrows, and gaze direction.",
   "Preserve the person's real eye color, eye shape, eyelid shape, eye size, and spacing exactly.",
   "Do not invent bright blue, green, anime, enlarged, or more symmetrical eyes.",
   "Do not add eyeglasses, sunglasses, lenses, or frames unless they are clearly visible in the reference photo.",
-  "Use bold ink outlines, warm natural skin tones, realistic detailed eyes, glossy hair, and a clean editorial look.",
-  "Remove the original background completely and replace it with plain pure white.",
-  "No shadow, no black silhouette, no drop shadow, no outline shape behind the person.",
-  "No colored splash paint, grunge texture, scenery, text, logos, or background graphics.",
-  "High detail, centered portrait, no extra people, no distorted face, no changed identity."
+  "Use bold black ink outlines, expressive comic shading, warm natural skin tones, realistic detailed eyes, glossy hair, and subtle halftone only on the person.",
+  "Create a sticker-style white cutout silhouette around the person, with a thin dark ink edge so the white outline is visible.",
+  "Remove the original background completely and replace it with flat pure white background only, #ffffff.",
+  "No beige, gray, cream, colored, gradient, textured, halftone, splash paint, scenery, shadows, logos, or background graphics.",
+  "High detail, centered portrait, no extra people, no distorted face, no changed identity, no changed clothing."
 ].join(" ");
 
 takePhotoButton.addEventListener("click", takePhoto);
