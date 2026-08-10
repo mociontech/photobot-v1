@@ -93,15 +93,15 @@ function captureInlinePhoto() {
   const sourceX = (camera.videoWidth - size) / 2;
   const sourceY = (camera.videoHeight - size) / 2;
 
-  snapshot.width = 1200;
-  snapshot.height = 1200;
+  snapshot.width = 900;
+  snapshot.height = 900;
 
   const context = snapshot.getContext("2d");
   context.translate(snapshot.width, 0);
   context.scale(-1, 1);
   context.drawImage(camera, sourceX, sourceY, size, size, 0, 0, snapshot.width, snapshot.height);
 
-  setPreview(snapshot.toDataURL("image/jpeg", 0.92));
+  setPreview(snapshot.toDataURL("image/jpeg", 0.86));
   generateImage();
 }
 
