@@ -67,14 +67,55 @@ app.listen(port, () => {
   console.log(`Filtro IA listo en http://localhost:${port}`);
 });
 
-const defaultPrompt = [
-  "Transform this portrait into a vibrant stylized sports-comic illustration.",
-  "Keep the same person, face identity, hairstyle, pose, and expression.",
-  "Use bold ink outlines, warm skin tones, detailed eyes, glossy curly hair,",
-  "Use a flat pure white background only, #ffffff,",
-  "dramatic rim light, clean sticker-like white contour, high detail.",
-  "No text, no logos, no extra people, no distorted face.",
-].join(" ");
+const defaultPrompt = `Transform the uploaded photo into a bold premium comic-style illustration while preserving the person's exact identity, facial structure, hairstyle, expression, pose, clothing, and overall proportions.
+
+Style target: high-contrast graphic novel / pop-comic illustration with strong black ink outlines, varied line weight, crisp line art, clean cel shading, and a polished illustrated finish. The character should clearly look like the same person in the photo, not like a generic face.
+
+Important visual treatment:
+- strong expressive black outlines around the face, hair, body, hands, and clothing
+- bold comic-style rendering
+- clean cel shading
+- detailed hair with illustrated depth and definition
+- warm, slightly saturated skin tones
+- polished comic-book finish, modern and premium
+- slightly stylized, but identity must remain recognizable
+
+Facial treatment:
+- keep the original comic contrast and overall style
+- reduce expression lines slightly
+- soften smile lines, forehead lines, under-eye lines, and facial creases just a little
+- do not exaggerate wrinkles or skin texture
+- do not make the person look older
+- do not over-smooth the face
+- preserve a flattering, youthful, and recognizable appearance while keeping the comic look
+
+Background:
+Use a plain clean white background only. Do not add green details, orange details, halftone bursts, splash graphics, motion lines, or decorative background elements. Keep the background fully white and simple so the focus stays entirely on the character.
+
+Outline:
+Add a subtle clean outline around the full silhouette of the person to separate the figure from the white background. Use a very light gray outline instead of pure white, approximately #F2F2F2 or a similar soft off-white/light gray tone. The outline should be visible enough to distinguish the person from the background, but still elegant and subtle.
+
+Composition:
+- use a tight close-up bust portrait like the target reference, with the face, head, neck, and shoulders filling most of the canvas
+- preserve the camera photo's original proportions, pose, crop, and subject position
+- extend the shoulders naturally to the side edges when they do so in the original photo
+- keep the person large and visually dominant from side to side and vertically
+- never shrink the person into a small centered figure or leave large empty white margins above, below, or around the person
+- keep the person integrated naturally in the composition, not as a sticker cutout
+
+Preserve identity strictly:
+Do not add glasses, facial hair, piercings, headphones, hats, jewelry, or accessories unless they are actually present in the original photo. Do not change the hairstyle, face shape, gender presentation, body type, clothing, or expression. Do not redesign the face.
+
+Important:
+Do not add strong background graphics.
+Do not make the person look aged.
+Do not exaggerate shadows that create wrinkles.
+Keep the same bold comic aesthetic and only make a subtle reduction in facial lines.
+
+Avoid:
+exaggerated wrinkles, deep facial folds, harsh aging lines, overly textured skin, flat vector look, overly soft illustration, washed-out colors, sticker effect, cutout effect, green details, graphic background elements, anime style, 3D render look, photorealism, generic facial features, or extra accessories not present in the original photo.
+
+Make the final result look like a high-quality stylized comic illustration with a white background, strong visual character, a subtle light-gray outline, and only a slight softening of facial expression lines.`;
 
 async function normalizeOutput(output) {
   const firstOutput = Array.isArray(output) ? output[0] : output;
