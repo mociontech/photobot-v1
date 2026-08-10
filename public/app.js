@@ -10,12 +10,17 @@ const placeholder = document.querySelector("#placeholder");
 const status = document.querySelector("#status");
 
 const takePhotoButton = document.querySelector("#takePhoto");
+const switchCameraButton = document.querySelector("#switchCamera");
+const downloadButton = document.querySelector("#download");
 const retakeButton = document.querySelector("#retake");
 const fileInput = document.querySelector("#fileInput");
 
 let currentImage = "";
+let currentResult = "";
 let mediaStream;
 let isInlineCameraReady = false;
+let activeFacingMode = "environment";
+let hasMultipleCameras = false;
 
 const firebaseConfig = {
   apiKey: "AIzaSyAd32fjHVssRxIzHijkeWd37MamHWzCajM",
@@ -40,6 +45,9 @@ Important visual treatment:
 - clean cel shading
 - detailed hair with illustrated depth and definition
 - warm, slightly saturated skin tones
+- use a distinctly warm color grade with peach, coral, terracotta, amber, and golden highlights
+- keep blacks rich and neutral while making skin and midtones feel sunlit and warm
+- avoid cold blue, cyan, steel-gray, pale, desaturated, or washed-out color casts
 - polished comic-book finish, modern and premium
 - slightly stylized, but identity must remain recognizable
 
@@ -78,9 +86,11 @@ Keep the same bold comic aesthetic and only make a subtle reduction in facial li
 Avoid:
 exaggerated wrinkles, deep facial folds, harsh aging lines, overly textured skin, flat vector look, overly soft illustration, washed-out colors, sticker effect, cutout effect, green details, graphic background elements, anime style, 3D render look, photorealism, generic facial features, or extra accessories not present in the original photo.
 
-Make the final result look like a high-quality stylized comic illustration with a white background, strong visual character, a subtle light-gray outline, and only a slight softening of facial expression lines.`;
+Make the final result look like a high-quality stylized comic illustration with a white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
 
 takePhotoButton.addEventListener("click", takePhoto);
+switchCameraButton.addEventListener("click", switchCamera);
+downloadButton.addEventListener("click", downloadResult);
 retakeButton.addEventListener("click", resetFlow);
 
 fileInput.addEventListener("change", () => {
@@ -105,31 +115,79 @@ fileInput.addEventListener("change", () => {
 
 startInlineCamera();
 
-async function startInlineCamera() {
+async function startInlineCamera(facingMode = "environment") {
   if (!navigator.mediaDevices?.getUserMedia) {
     showCameraFallback("Tu navegador no permite cámara activa aquí. Usa el botón para abrir la cámara nativa.");
     return;
   }
 
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: { ideal: 1600 },
-        height: { ideal: 1200 }
-      },
-      audio: false
-    });
+    stopMediaStream();
+    mediaStream = await requestCamera(facingMode);
 
     camera.srcObject = mediaStream;
+    const trackFacingMode = mediaStream.getVideoTracks()[0]?.getSettings().facingMode;
+    activeFacingMode = trackFacingMode || facingMode;
+    camera.classList.toggle("is-mirrored", activeFacingMode === "user");
     isInlineCameraReady = true;
     camera.hidden = false;
     cameraFallback.hidden = true;
+    await updateCameraSwitchVisibility();
     setStatus("Cámara lista. Toca “Tomar foto”.");
   } catch (error) {
     showCameraFallback("La cámara activa requiere permisos o HTTPS. El botón abrirá la cámara nativa.");
     console.info("No se pudo iniciar cámara activa:", error);
   }
+}
+
+async function requestCamera(facingMode) {
+  const dimensions = {
+    width: { ideal: 1600 },
+    height: { ideal: 1200 }
+  };
+
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: {
+        ...dimensions,
+        facingMode: { exact: facingMode }
+      },
+      audio: false
+    });
+  } catch {
+    return navigator.mediaDevices.getUserMedia({
+      video: {
+        ...dimensions,
+        facingMode: { ideal: facingMode }
+      },
+      audio: false
+    });
+  }
+}
+
+async function updateCameraSwitchVisibility() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    hasMultipleCameras = devices.filter((device) => device.kind === "videoinput").length > 1;
+    switchCameraButton.hidden = !hasMultipleCameras;
+  } catch {
+    hasMultipleCameras = false;
+    switchCameraButton.hidden = true;
+  }
+}
+
+async function switchCamera() {
+  switchCameraButton.disabled = true;
+  setStatus("Cambiando cámara...");
+  const nextFacingMode = activeFacingMode === "environment" ? "user" : "environment";
+  await startInlineCamera(nextFacingMode);
+  switchCameraButton.disabled = false;
+}
+
+function stopMediaStream() {
+  mediaStream?.getTracks().forEach((track) => track.stop());
+  mediaStream = undefined;
+  camera.srcObject = null;
 }
 
 function takePhoto() {
@@ -152,8 +210,12 @@ function captureInlinePhoto() {
   const context = snapshot.getContext("2d");
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.translate(snapshot.width, 0);
-  context.scale(-1, 1);
+
+  if (activeFacingMode === "user") {
+    context.translate(snapshot.width, 0);
+    context.scale(-1, 1);
+  }
+
   context.drawImage(camera, 0, 0, sourceWidth, sourceHeight, 0, 0, snapshot.width, snapshot.height);
 
   setPreview(snapshot.toDataURL("image/jpeg", 0.86));
@@ -279,6 +341,8 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   drawExpandedSilhouette(outputContext, graySilhouette, outerRadius);
   drawExpandedSilhouette(outputContext, whiteSilhouette, outlineRadius);
 
+  outputContext.save();
+  outputContext.filter = "saturate(1.12) sepia(0.06) contrast(1.03)";
   outputContext.drawImage(
     subjectCanvas,
     bounds.x,
@@ -290,6 +354,7 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
     drawWidth,
     drawHeight
   );
+  outputContext.restore();
 
   return outputCanvas.toDataURL("image/jpeg", 0.94);
 }
@@ -411,14 +476,34 @@ function setPreview(dataUrl) {
   preview.src = dataUrl;
   preview.hidden = false;
   camera.hidden = true;
+  switchCameraButton.hidden = true;
   cameraFallback.hidden = true;
   retakeButton.hidden = false;
 }
 
 function showResult(imageSource) {
+  currentResult = imageSource;
   result.src = imageSource;
   result.hidden = false;
   placeholder.hidden = true;
+  downloadButton.hidden = false;
+}
+
+async function downloadResult() {
+  if (!currentResult) {
+    return;
+  }
+
+  const response = await fetch(currentResult);
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = `photobot-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 async function saveGeneratedPhoto(imageSource) {
@@ -442,16 +527,19 @@ async function saveGeneratedPhoto(imageSource) {
 
 function resetFlow() {
   currentImage = "";
+  currentResult = "";
   fileInput.value = "";
   preview.removeAttribute("src");
   result.removeAttribute("src");
   preview.hidden = true;
   result.hidden = true;
   placeholder.hidden = false;
+  downloadButton.hidden = true;
   retakeButton.hidden = true;
 
   if (isInlineCameraReady) {
     camera.hidden = false;
+    switchCameraButton.hidden = !hasMultipleCameras;
     cameraFallback.hidden = true;
     setStatus("Cámara lista. Toca “Tomar foto”.");
   } else {
@@ -460,14 +548,17 @@ function resetFlow() {
 }
 
 function clearResult() {
+  currentResult = "";
   result.removeAttribute("src");
   result.hidden = true;
   placeholder.hidden = false;
+  downloadButton.hidden = true;
 }
 
 function showCameraFallback(message) {
   isInlineCameraReady = false;
   camera.hidden = true;
+  switchCameraButton.hidden = true;
   cameraFallback.textContent = message;
   cameraFallback.hidden = false;
   setStatus(message);
@@ -479,5 +570,7 @@ function setStatus(message) {
 
 function setLoading(isLoading) {
   takePhotoButton.disabled = isLoading;
+  switchCameraButton.disabled = isLoading;
+  downloadButton.disabled = isLoading;
   takePhotoButton.textContent = isLoading ? "Generando…" : "Tomar foto";
 }

@@ -21,6 +21,15 @@
       <section class="stage" aria-live="polite">
         <article class="panel image-card">
           <div class="card-label">Cámara</div>
+          <button
+            id="switchCamera"
+            class="camera-switch"
+            type="button"
+            title="Cambiar entre cámara trasera y frontal"
+            hidden
+          >
+            Cambiar cámara
+          </button>
           <video id="camera" autoplay playsinline muted></video>
           <img id="preview" alt="Foto capturada para procesar" hidden />
           <div id="cameraFallback" class="placeholder" hidden>
@@ -37,8 +46,9 @@
 
       <footer class="controls">
         <button id="takePhoto" class="primary take-photo" type="button">Tomar foto</button>
+        <button id="download" class="ghost" type="button" hidden>Descargar</button>
         <button id="retake" class="ghost" type="button" hidden>Reiniciar</button>
-        <input id="fileInput" type="file" accept="image/*" capture="user" hidden />
+        <input id="fileInput" type="file" accept="image/*" capture="environment" hidden />
         <canvas id="snapshot" hidden></canvas>
       </footer>
     </main>

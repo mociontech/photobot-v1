@@ -138,7 +138,22 @@ video,
 
 video {
   background: rgba(0, 0, 0, 0.32);
+}
+
+video.is-mirrored {
   transform: scaleX(-1);
+}
+
+.camera-switch {
+  position: absolute;
+  z-index: 5;
+  top: clamp(18px, 2vw, 26px);
+  right: clamp(18px, 2vw, 26px);
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 9px 14px;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(12px);
 }
 
 .result-card img {
@@ -158,6 +173,7 @@ video {
 .controls {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
