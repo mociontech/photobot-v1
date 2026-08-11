@@ -54,6 +54,13 @@ Important visual treatment:
 - polished comic-book finish, modern and premium
 - slightly stylized, but identity must remain recognizable
 
+Skin color priority:
+- render all visible skin with a clearly dominant warm orange-peach color treatment inspired by Pantone 1505 C and #FF6900
+- translate that orange reference into natural illustrated skin: apricot-orange midtones, golden-peach highlights, coral warmth, and terracotta or copper shadows
+- the face must look noticeably more orange and warmer than the uploaded photo while remaining flattering, dimensional, and recognizable
+- do not apply #FF6900 as one flat solid fill; preserve facial planes, highlights, blush, shadows, and natural tonal variation
+- avoid pale beige, cool pink, blue, gray, neutral, ashy, or washed-out skin tones
+
 Facial treatment:
 - keep the original comic contrast and overall style
 - reduce expression lines slightly
@@ -89,7 +96,7 @@ Keep the same bold comic aesthetic and only make a subtle reduction in facial li
 Avoid:
 exaggerated wrinkles, deep facial folds, harsh aging lines, overly textured skin, flat vector look, overly soft illustration, washed-out colors, sticker effect, cutout effect, green details, graphic background elements, anime style, 3D render look, photorealism, generic facial features, or extra accessories not present in the original photo.
 
-Make the final result look like a high-quality stylized comic illustration with a distinctly warm premium palette, white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
+Make the final result look like a high-quality stylized comic illustration with a distinctly orange-warm premium skin palette, white background, strong visual character, a clean white silhouette border with a thin light-gray outer keyline, and only a slight softening of facial expression lines.`;
 
 takePhotoButton.addEventListener("click", takePhoto);
 switchCameraButton.addEventListener("click", switchCamera);
@@ -347,7 +354,7 @@ async function composePortraitOnWhiteCanvas(subjectSource, cameraSource) {
   drawExpandedSilhouette(outputContext, whiteSilhouette, outlineRadius);
 
   outputContext.save();
-  outputContext.filter = "saturate(1.18) sepia(0.12) contrast(1.04) brightness(1.02)";
+  outputContext.filter = "saturate(1.24) sepia(0.16) hue-rotate(-4deg) contrast(1.05) brightness(1.02)";
   outputContext.drawImage(
     subjectCanvas,
     bounds.x,
