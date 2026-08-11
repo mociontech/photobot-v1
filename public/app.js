@@ -18,7 +18,6 @@ const fileInput = document.querySelector("#fileInput");
 let currentImage = "";
 let currentOriginal = "";
 let currentResult = "";
-let currentComparison = "";
 let mediaStream;
 let isInlineCameraReady = false;
 let activeFacingMode = "environment";
@@ -262,8 +261,6 @@ async function generateImage() {
     const transparentResult = payload.imageDataUrl || payload.imageUrl;
     setStatus("Ajustando fondo y encuadre...");
     const resultImage = await composePortraitOnWhiteCanvas(transparentResult, sourceImage);
-    setStatus("Preparando comparacion...");
-    currentComparison = await createComparisonImage(currentOriginal, resultImage);
     showResult(resultImage);
     setStatus("Guardando resultado...");
     await saveGeneratedPhoto(resultImage);
@@ -483,61 +480,6 @@ function loadImage(imageSource) {
   });
 }
 
-async function createComparisonImage(originalSource, resultSource) {
-  const [originalImage, resultImage] = await Promise.all([
-    loadImage(originalSource),
-    loadImage(resultSource)
-  ]);
-  const sourceWidth = Math.max(originalImage.naturalWidth, resultImage.naturalWidth);
-  const sourceHeight = Math.max(originalImage.naturalHeight, resultImage.naturalHeight);
-  const exportScale = Math.min(1, 1600 / Math.max(sourceWidth, sourceHeight));
-  const panelWidth = Math.round(sourceWidth * exportScale);
-  const imageHeight = Math.round(sourceHeight * exportScale);
-  const labelHeight = Math.max(64, Math.round(imageHeight * 0.075));
-  const dividerWidth = Math.max(8, Math.round(panelWidth * 0.01));
-  const comparisonCanvas = document.createElement("canvas");
-  comparisonCanvas.width = panelWidth * 2 + dividerWidth;
-  comparisonCanvas.height = imageHeight + labelHeight;
-
-  const context = comparisonCanvas.getContext("2d");
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, comparisonCanvas.width, comparisonCanvas.height);
-  context.fillStyle = "#111111";
-  context.fillRect(0, 0, comparisonCanvas.width, labelHeight);
-  context.fillRect(panelWidth, 0, dividerWidth, comparisonCanvas.height);
-  context.fillStyle = "#ffffff";
-  context.font = `700 ${Math.max(24, Math.round(labelHeight * 0.42))}px Arial, sans-serif`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText("ORIGINAL", panelWidth / 2, labelHeight / 2);
-  context.fillText(
-    "RESULTADO IA",
-    panelWidth + dividerWidth + panelWidth / 2,
-    labelHeight / 2
-  );
-
-  drawImageContained(context, originalImage, 0, labelHeight, panelWidth, imageHeight);
-  drawImageContained(
-    context,
-    resultImage,
-    panelWidth + dividerWidth,
-    labelHeight,
-    panelWidth,
-    imageHeight
-  );
-
-  return comparisonCanvas.toDataURL("image/jpeg", 0.94);
-}
-
-function drawImageContained(context, image, x, y, width, height) {
-  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
-  const drawWidth = image.naturalWidth * scale;
-  const drawHeight = image.naturalHeight * scale;
-  const drawX = x + (width - drawWidth) / 2;
-  const drawY = y + (height - drawHeight) / 2;
-  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
-}
-
 function setPreview(dataUrl) {
   currentImage = dataUrl;
   currentOriginal = dataUrl;
@@ -554,32 +496,35 @@ function showResult(imageSource) {
   result.src = imageSource;
   result.hidden = false;
   placeholder.hidden = true;
-  downloadButton.hidden = !currentComparison;
+  downloadButton.hidden = !(currentOriginal && currentResult);
 }
 
 async function downloadResult() {
-  if (!currentComparison) {
+  if (!currentOriginal || !currentResult) {
     return;
   }
 
-  const fileName = `photobot-comparacion-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`;
-  const comparisonFile = dataUrlToFile(currentComparison, fileName);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const files = [
+    dataUrlToFile(currentOriginal, `photobot-original-${timestamp}.jpg`),
+    dataUrlToFile(currentResult, `photobot-resultado-ia-${timestamp}.jpg`)
+  ];
 
   if (
     navigator.share &&
-    navigator.canShare?.({ files: [comparisonFile] })
+    navigator.canShare?.({ files })
   ) {
     try {
-      setStatus("En el menu, toca Guardar imagen para enviarla a Fotos.");
+      setStatus("En el menu, toca Guardar 2 imagenes para enviarlas a Fotos.");
       await navigator.share({
-        title: "Comparacion Photobot",
-        files: [comparisonFile]
+        title: "Fotos Photobot",
+        files
       });
-      setStatus("Comparacion compartida o guardada.");
+      setStatus("Fotos compartidas o guardadas.");
       return;
     } catch (error) {
       if (error.name === "AbortError") {
-        setStatus("Comparacion lista para guardar.");
+        setStatus("Fotos listas para guardar.");
         return;
       }
 
@@ -587,8 +532,10 @@ async function downloadResult() {
     }
   }
 
-  downloadFile(comparisonFile);
-  setStatus("Comparacion descargada.");
+  files.forEach((file, index) => {
+    window.setTimeout(() => downloadFile(file), index * 250);
+  });
+  setStatus("Fotos descargadas por separado.");
 }
 
 function dataUrlToFile(dataUrl, fileName) {
@@ -638,7 +585,6 @@ function resetFlow() {
   currentImage = "";
   currentOriginal = "";
   currentResult = "";
-  currentComparison = "";
   fileInput.value = "";
   preview.removeAttribute("src");
   result.removeAttribute("src");
@@ -660,7 +606,6 @@ function resetFlow() {
 
 function clearResult() {
   currentResult = "";
-  currentComparison = "";
   result.removeAttribute("src");
   result.hidden = true;
   placeholder.hidden = false;
