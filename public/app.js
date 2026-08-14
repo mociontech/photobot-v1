@@ -16,7 +16,6 @@ const retakeButton = document.querySelector("#retake");
 const fileInput = document.querySelector("#fileInput");
 
 let currentImage = "";
-let currentOriginal = "";
 let currentResult = "";
 let mediaStream;
 let isInlineCameraReady = false;
@@ -482,7 +481,6 @@ function loadImage(imageSource) {
 
 function setPreview(dataUrl) {
   currentImage = dataUrl;
-  currentOriginal = dataUrl;
   preview.src = dataUrl;
   preview.hidden = false;
   camera.hidden = true;
@@ -496,35 +494,35 @@ function showResult(imageSource) {
   result.src = imageSource;
   result.hidden = false;
   placeholder.hidden = true;
-  downloadButton.hidden = !(currentOriginal && currentResult);
+  downloadButton.hidden = !currentResult;
 }
 
 async function downloadResult() {
-  if (!currentOriginal || !currentResult) {
+  if (!currentResult) {
     return;
   }
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const files = [
-    dataUrlToFile(currentOriginal, `photobot-original-${timestamp}.jpg`),
-    dataUrlToFile(currentResult, `photobot-resultado-ia-${timestamp}.jpg`)
-  ];
+  const resultFile = dataUrlToFile(
+    currentResult,
+    `photobot-resultado-ia-${timestamp}.jpg`
+  );
 
   if (
     navigator.share &&
-    navigator.canShare?.({ files })
+    navigator.canShare?.({ files: [resultFile] })
   ) {
     try {
-      setStatus("En el menu, toca Guardar 2 imagenes para enviarlas a Fotos.");
+      setStatus("En el menu, toca Guardar imagen para enviarla a Fotos.");
       await navigator.share({
-        title: "Fotos Photobot",
-        files
+        title: "Resultado Photobot",
+        files: [resultFile]
       });
-      setStatus("Fotos compartidas o guardadas.");
+      setStatus("Imagen procesada compartida o guardada.");
       return;
     } catch (error) {
       if (error.name === "AbortError") {
-        setStatus("Fotos listas para guardar.");
+        setStatus("Imagen procesada lista para guardar.");
         return;
       }
 
@@ -532,10 +530,8 @@ async function downloadResult() {
     }
   }
 
-  files.forEach((file, index) => {
-    window.setTimeout(() => downloadFile(file), index * 250);
-  });
-  setStatus("Fotos descargadas por separado.");
+  downloadFile(resultFile);
+  setStatus("Imagen procesada descargada.");
 }
 
 function dataUrlToFile(dataUrl, fileName) {
@@ -583,7 +579,6 @@ async function saveGeneratedPhoto(imageSource) {
 
 function resetFlow() {
   currentImage = "";
-  currentOriginal = "";
   currentResult = "";
   fileInput.value = "";
   preview.removeAttribute("src");
